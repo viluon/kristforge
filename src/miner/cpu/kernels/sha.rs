@@ -5,7 +5,6 @@
 )]
 
 use super::{score_ab, Kernel, ScalarKernelInput};
-use std::arch::x86_64::*;
 
 pub struct SHA;
 impl Kernel for SHA {
@@ -27,16 +26,22 @@ fn digest(data: &[u8; 64]) -> [u32; 8] {
         0x5be0cd19,
     ];
 
-    unsafe { process(&mut state, &data) };
+    #[cfg(all(target_feature = "sha", target_feature = "sse4.1"))]
+    unsafe { process_sse4(&mut state, &data) };
+    #[cfg(not(all(target_feature = "sha", target_feature = "sse4.1")))]
+    sha2::compress256(&mut state, &[(*data).into()]);
 
     state
 }
 
 /// Process multiple blocks. The caller is responsible for setting the initial
 /// state, and the caller is responsible for padding the final block.
+#[cfg(all(target_feature = "sha", target_feature = "sse4.1"))]
 #[target_feature(enable = "sha")]
 #[target_feature(enable = "sse4.1")]
-unsafe fn process(state: &mut [u32; 8], data: &[u8; 64]) {
+unsafe fn process_sse4(state: &mut [u32; 8], data: &[u8; 64]) {
+    use std::arch::x86_64::*;
+
     let mask = _mm_set_epi64x(0x0c0d0e0f08090a0b, 0x0405060700010203);
 
     let mut state0: __m128i;

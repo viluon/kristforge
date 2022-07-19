@@ -53,8 +53,6 @@ mod tests {
 
     #[test]
     fn test_sha_kernel() {
-        if is_x86_feature_detected!("sha") {
-            test_scalar_kernel(SHA);
-        }
+        test_scalar_kernel(SHA);
     }
 }

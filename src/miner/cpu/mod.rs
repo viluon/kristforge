@@ -91,9 +91,7 @@ impl Display for CpuInfo {
 fn get_supported_kernels() -> EnumSet<KernelType> {
     let mut supported = EnumSet::only(KernelType::Unoptimized);
 
-    if is_x86_feature_detected!("sha") {
-        supported |= KernelType::SHA;
-    }
+    supported |= KernelType::SHA;
 
     supported
 }
